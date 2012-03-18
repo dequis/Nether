@@ -121,7 +121,7 @@ public class NetherPortal {
 		
 		// For each column try to find a portal block
 		for (Block col : columns) {
-			for (int y = 127; y >= 0; --y) {
+			for (int y = world.getMaxHeight(); y >= 0; --y) {
 				Block b = world.getBlockAt(col.getX(), y, col.getZ());
 				if (b.getType().equals(Material.PORTAL)) {
 					// Huzzah!
