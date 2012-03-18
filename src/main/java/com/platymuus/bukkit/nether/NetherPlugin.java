@@ -10,9 +10,8 @@ import org.bukkit.TravelAgent;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.WorldCreator;
 
 /**
  * Main class for Nether 2.0
@@ -48,7 +47,6 @@ public class NetherPlugin extends JavaPlugin {
                 out.close();
                 in.close();
 
-                getConfiguration().load();
             }
             catch (IOException ex) {
                 System.out.println("[Nether] Unable to write default config file: " + ex);
@@ -58,29 +56,23 @@ public class NetherPlugin extends JavaPlugin {
         // Verify the mode is valid for the nether setting
         if (getServer().getAllowNether()) {
             if (getMode() == MODE_CLASSIC) {
-                getConfiguration().setProperty("mode", MODE_AGENT);
+                getConfig().set("mode", MODE_AGENT);
                 System.out.println("[Nether] Allow-nether is on, using Agent mode instead of Classic");
             }
         } else {
             if (getMode() != MODE_CLASSIC) {
                 int prevMode = getMode();
-                getConfiguration().setProperty("mode", MODE_CLASSIC);
+                getConfig().set("mode", MODE_CLASSIC);
                 System.out.println("[Nether] Allow-nether is off, using Classic mode instead of " + (prevMode == MODE_ADJUST ? "Adjust" : "Agent"));
             }
         }
 
-        if (getMode() == MODE_CLASSIC) {
-            // In classic mode, use PLAYER_MOVE to detect portal entrance, and create our own world.
-            getServer().createWorld(getConfiguration().getString("worldName", "nether"), Environment.NETHER);
-            getServer().getPluginManager().registerEvent(Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
-        } else {
-            // In AGENT and ADJUST mode, use the portal event
-            getServer().getPluginManager().registerEvent(Type.PLAYER_PORTAL, playerListener, Priority.Normal, this);
-        }
+        getServer().getPluginManager().registerEvents(playerListener, this);
 
-        if (getRespawn()) {
-            // If we should respawn players to the normal world, listen for respawn
-            getServer().getPluginManager().registerEvent(Type.PLAYER_RESPAWN, playerListener, Priority.Normal, this);
+        if (getMode() == MODE_CLASSIC) {
+            WorldCreator netherWorldCreator = new WorldCreator(getConfig().getString("worldName", "nether"));
+            netherWorldCreator.environment(Environment.NETHER);
+            getServer().createWorld(netherWorldCreator);
         }
 
         // Good morning
@@ -94,7 +86,7 @@ public class NetherPlugin extends JavaPlugin {
 
     // Helpers
     public World getNether() {
-        return getServer().getWorld(getConfiguration().getString("worldName", "nether"));
+        return getServer().getWorld(getConfig().getString("worldName", "nether"));
     }
 
     public World getNormal() {
@@ -107,7 +99,7 @@ public class NetherPlugin extends JavaPlugin {
     }
 
     public void logMessage(String message) {
-        if (getConfiguration().getBoolean("log", false)) {
+        if (getConfig().getBoolean("log", false)) {
             System.out.println("[Nether] " + message);
         }
     }
@@ -125,27 +117,27 @@ public class NetherPlugin extends JavaPlugin {
 
     // Config getting stuff
     public int getMode() {
-        return getConfiguration().getInt("mode", MODE_AGENT);
+        return getConfig().getInt("mode", MODE_AGENT);
     }
 
     public int getScale() {
-        return getConfiguration().getInt("scale", 8);
+        return getConfig().getInt("scale", 8);
     }
 
     public boolean getRespawn() {
-        return getConfiguration().getBoolean("respawn", true);
+        return getConfig().getBoolean("respawn", true);
     }
 
     public int getSearchRadius() {
-        return getConfiguration().getInt("options.searchRadius", 24);
+        return getConfig().getInt("options.searchRadius", 24);
     }
 
     public int getCreationRadius() {
-        return getConfiguration().getInt("options.creationRadius", 12);
+        return getConfig().getInt("options.creationRadius", 12);
     }
 
     public boolean getCanCreate() {
-        return getConfiguration().getBoolean("options.canCreate", true);
+        return getConfig().getBoolean("options.canCreate", true);
     }
 
 }

@@ -7,11 +7,13 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.event.player.*;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 
 /**
  * Player listener for Nether 2.0
  */
-class NetherPlayerListener extends PlayerListener {
+class NetherPlayerListener implements Listener {
 
     private NetherPlugin plugin;
 
@@ -19,9 +21,12 @@ class NetherPlayerListener extends PlayerListener {
         this.plugin = plugin;
     }
 
-    @Override
+    @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        // Note: only registered when mode is CLASSIC
+        // only when mode is CLASSIC
+        if (plugin.getMode() != plugin.MODE_CLASSIC) {
+            return;
+        }
 
         Block b = event.getTo().getBlock();
         World world = b.getWorld();
@@ -107,15 +112,20 @@ class NetherPlayerListener extends PlayerListener {
         }
     }
 
-    @Override
+    @EventHandler
     public void onPlayerPortal(PlayerPortalEvent event) {
-        // Note: only registered when mode is AGENT or ADJUST
-        event.setPortalTravelAgent(plugin.adjustTravelAgent(event.getPortalTravelAgent(), event.getPlayer()));
+        // only when mode is AGENT or ADJUST
+        if (plugin.getMode() != plugin.MODE_CLASSIC) {
+            event.setPortalTravelAgent(plugin.adjustTravelAgent(event.getPortalTravelAgent(), event.getPlayer()));
+        }
     }
 
-    @Override
+    @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        // Note: only registered when respawn is true
+        // only when respawn is true
+        if (!plugin.getRespawn()) {
+            return;
+        }
         if (event.getPlayer().getWorld().getEnvironment() == World.Environment.NETHER) {
             World normal = plugin.getNormal();
             if (normal != null) {
